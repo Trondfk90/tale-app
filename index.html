@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <title>Tale robot v1.10 Beta</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <script src="index.js"></script>
+  <script src="renderer.js"></script>
+</head>
+<body>
+  <h1>Tekst til tale</h1><h3>(beta)</h3>
+  <textarea id="input-text"></textarea>
+  <select id="voice-select">
+    <option value="nb-NO-FinnNeural">Norwegian Bokmål (Finn)</option>
+    <option value="nb-NO-IselinNeural">Norwegian Bokmål (Iselin)</option>
+    <option value="nb-NO-PernilleNeural">Norwegian Bokmål (Pernille)</option>
+    <option value="en-GB-SoniaNeural">	en-GB-SoniaNeural</option>
+    <option value="en-GB-RyanNeural">	English (Ryan)</option>
+  </select>
+  <button id="synthesize-btn">Synthesize</button>
+ <img src=""></img>
+  <script>
+    const voiceSelect = document.getElementById('voice-select');
+    const synthesizeBtn = document.getElementById('synthesize-btn');
+    const inputText = document.getElementById('input-text');
+
+    synthesizeBtn.addEventListener('click', () => {
+      const text = inputText.value;
+      const selectedVoice = voiceSelect.value;
+      ipcRenderer.send('synthesize', { text, voice: selectedVoice });
+    });
+  </script>
+</body>
+</html>
