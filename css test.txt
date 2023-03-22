@@ -1,0 +1,158 @@
+/* Pitch and speed controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.controls label {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.controls input[type="range"] {
+  width: 80%;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  background-color: transparent;
+  height: 6px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.controls input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background-color: #ccc;
+  border-radius: 6px;
+}
+
+.controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  margin-top: -8px;
+}
+
+.controls input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  background-color: #ccc;
+  border-radius: 6px;
+}
+
+.controls input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+}
+
+.controls input[type="range"]::-ms-track {
+  width: 100%;
+  height: 6px;
+  background-color: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+
+.controls input[type="range"]::-ms-fill-lower {
+  background-color: #ccc;
+  border-radius: 6px;
+}
+
+.controls input[type="range"]::-ms-fill-upper {
+  background-color: #ccc;
+  border-radius: 6px;
+}
+
+.controls input[type="range"]::-ms-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  margin-top: 0px;
+  margin: 0;
+  }
+  
+  .controls button#synthesize-btn {
+  margin-right: 10px;
+  padding: 10px 20px;
+  background-color: #4285f4;
+  color: #fff;
+  font-size: 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .controls button#synthesize-btn:hover {
+  background-color: #3367d6;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .controls button#synthesize-btn:active {
+  background-color: #2a56c6;
+  box-shadow: none;
+  }
+  
+  .controls button#play-recording-btn {
+  padding: 10px 20px;
+  background-color: #333;
+  color: #fff;
+  font-size: 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  
+  .controls button#play-recording-btn:hover {
+  background-color: #222;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .controls button#play-recording-btn:active {
+  background-color: #111;
+  box-shadow: none;
+  }
+  
+  img {
+  display: block;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 6px;
+  }
+  
+  /* Textareas */
+  textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  }
+  
+  textarea#input-text {
+  height: 300px;
+  }
+  
+  textarea#ssml-output {
+  height: 200px;
+  }
