@@ -2,34 +2,47 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
-  <title>Tale robot v1.10 Beta</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <title>Tekst til tale v1.10 Beta</title>
   <link rel="stylesheet" type="text/css" href="main.css">
   <script src="index.js"></script>
   <script src="renderer.js"></script>
 </head>
 <body>
-  <h1>Tekst til tale</h1><h3>(beta)</h3>
-  <textarea id="input-text"></textarea>
+  <h1>Tekst til tale beta</h1>
+  &nbsp; &nbsp;
+  <p>Bruk knappene under til og sette inn pauser i teksten for mer naturlig tale</p>
+  <div class="ssml-buttons">
+    <button id="btn-none">ingen</button>
+    <button id="btn-100ms">egendefinert</button>
+    <button id="btn-x-weak">X-kort</button>
+    <button id="btn-weak">Kort</button>
+    <button id="btn-medium">Middels</button>
+    <button id="btn-strong">Lang</button>
+    <button id="btn-x-strong">X-lang</button>
+  </div>
+    <label for="input-text">Skriv inn tekst her:</label>
+    <textarea id="input-text"></textarea>
+    <label for="ssml-output">ssml-output:</label>
+    <textarea id="ssml-output" readonly></textarea>
+  </div>
+  <label for="voice-select">Velg stemme:</label>
   <select id="voice-select">
     <option value="nb-NO-FinnNeural">Norwegian Bokmål (Finn)</option>
     <option value="nb-NO-IselinNeural">Norwegian Bokmål (Iselin)</option>
     <option value="nb-NO-PernilleNeural">Norwegian Bokmål (Pernille)</option>
-    <option value="en-GB-SoniaNeural">	en-GB-SoniaNeural</option>
+    <option value="en-GB-SoniaNeural">	English (Sonia)</option>
     <option value="en-GB-RyanNeural">	English (Ryan)</option>
   </select>
-  <button id="synthesize-btn">Synthesize</button>
- <img src=""></img>
-  <script>
-    const voiceSelect = document.getElementById('voice-select');
-    const synthesizeBtn = document.getElementById('synthesize-btn');
-    const inputText = document.getElementById('input-text');
+  
+  <label for="pitch-slider">Tone:</label>
+  <input type="range" id="pitch-slider" min="0" max="2" step="0.1" value="1">
 
-    synthesizeBtn.addEventListener('click', () => {
-      const text = inputText.value;
-      const selectedVoice = voiceSelect.value;
-      ipcRenderer.send('synthesize', { text, voice: selectedVoice });
-    });
-  </script>
+  <label for="speed-slider">Hastighet:</label>
+  <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
+
+  <button id="play-recording-btn">Spill av lyd</button>
+
+  <button id="synthesize-btn">Lagre til fil</button>
 </body>
 </html>
