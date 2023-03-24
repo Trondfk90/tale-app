@@ -1,5 +1,13 @@
 module.exports = {
-  packagerConfig: {},
+  packagerConfig: {
+    asar: {
+      unpack: "*.node",
+      files: [
+        "**/*",
+        ".env" // Include the .env file in the packaged application
+      ],
+    },
+  },
   rebuildConfig: {},
   makers: [
     {

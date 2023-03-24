@@ -2,6 +2,7 @@
 const { app, BrowserWindow, dialog } = require('electron'); // Electron modules
 const sdk = require("microsoft-cognitiveservices-speech-sdk"); // Microsoft Speech SDK
 const ipcMain = require('electron').ipcMain; // Inter-process communication
+const { autoUpdater } = require('electron-updater');
 const path = require('path'); // Path module
 const fs = require('fs'); // File System module
 const iconPath = path.join(__dirname, 'icon2.png');
@@ -16,6 +17,17 @@ require('dotenv').config();
 
 // Create the main window
 function createWindow() {
+  const platform = process.platform;
+  let iconFile;
+
+  if (platform === 'win32') {
+    iconFile = 'icon2.ico';
+  } else {
+    iconFile = 'icon2.png';
+  }
+
+  const iconPath = path.join(__dirname, iconFile);
+
   mainWindow = new BrowserWindow({
     icon: iconPath,
     width: 1000,
@@ -23,7 +35,6 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
-      
     }
   });
 
@@ -59,7 +70,8 @@ ipcMain.on('synthesize', (event, text, voiceName, pitch, rate) => {
       } else {
         console.error("Speech synthesis canceled, " + result.errorDetails +
           "\nDid you set the speech resource key and region values?");
-      }
+        mainWindow.webContents.send('synthesize:error', result.errorDetails);
+      }      
       synthesizer.close();
       synthesizer = null;
     },
@@ -77,6 +89,25 @@ function saveAudioFile(audioData) {
   if (!audioData) {
     console.error('Audio data is null, cannot save the file.');
     return;
+  }
+
+  function initAutoUpdater() {
+    // Check for updates when the app is ready
+    app.on('ready', () => {
+      autoUpdater.checkForUpdatesAndNotify();
+    });
+  
+    // Log the update status
+    autoUpdater.on('update-available', () => {
+      console.log('Update available.');
+    });
+    autoUpdater.on('update-downloaded', () => {
+      console.log('Update downloaded. Restarting app...');
+      autoUpdater.quitAndInstall();
+    });
+    autoUpdater.on('error', (err) => {
+      console.error('Error during update:', err);
+    });
   }
 
   // Generate a date stamp string

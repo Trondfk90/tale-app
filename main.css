@@ -170,3 +170,29 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 14px;
   letter-spacing: 1px;
 }
+.error-modal {
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.error-modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}
+
+.error-modal-content h2 {
+  margin-top: 0;
+}
+
+.error-modal-content button {
+  margin-right: 10px;
+}

@@ -1,5 +1,5 @@
 {
-  "name": "tale-app",
+  "name": "tale-botolf",
   "bin": "index.js",
   "version": "1.1.0",
   "description": "tekst til tale app",
@@ -17,10 +17,11 @@
   },
   "keywords": [],
   "author": "tfk",
-  "license": "ISC",
+  "license": "AGPL",
   "dependencies": {
     "dotenv": "^16.0.3",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-updater": "^5.3.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.25.1"
   },
   "devDependencies": {

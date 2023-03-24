@@ -31,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('synthesize', text, voiceName, pitch, speed);
     ipcRenderer.once('synthesize:done', (event, receivedAudioData) => {
       audioData = receivedAudioData;
+      ipcRenderer.once('synthesize:error', (event, errorMessage) => {
+        showErrorDialog(errorMessage);
+      });
+      
   
       if (playAudio) {
         const audio = new Audio();
@@ -49,6 +53,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function showErrorDialog(errorMessage) {
+    const modal = document.createElement('div');
+    modal.classList.add('error-modal');
+    modal.innerHTML = `
+      <div class="error-modal-content">
+        <h2>Error</h2>
+        <p>${errorMessage}</p>
+        <button id="copy-error-btn">Copy Error Message</button>
+        <button id="close-error-btn">Close</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  
+    document.getElementById('copy-error-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(errorMessage)
+        .then(() => {
+          console.log('Error message copied to clipboard');
+        })
+        .catch(err => {
+          console.error('Could not copy text: ', err);
+        });
+    });
+  
+    document.getElementById('close-error-btn').addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+  }
+  
   function insertSSMLTag(tag) {
     const inputTextElement = document.getElementById('input-text');
     const cursorPosition = inputTextElement.selectionStart;
