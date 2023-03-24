@@ -90,26 +90,7 @@ function saveAudioFile(audioData) {
     console.error('Audio data is null, cannot save the file.');
     return;
   }
-
-  function initAutoUpdater() {
-    // Check for updates when the app is ready
-    app.on('ready', () => {
-      autoUpdater.checkForUpdatesAndNotify();
-    });
   
-    // Log the update status
-    autoUpdater.on('update-available', () => {
-      console.log('Update available.');
-    });
-    autoUpdater.on('update-downloaded', () => {
-      console.log('Update downloaded. Restarting app...');
-      autoUpdater.quitAndInstall();
-    });
-    autoUpdater.on('error', (err) => {
-      console.error('Error during update:', err);
-    });
-  }
-
   // Generate a date stamp string
   const date = new Date();
   const dateStamp = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}_${date.getHours().toString().padStart(2, '0')}-${date.getMinutes().toString().padStart(2, '0')}-${date.getSeconds().toString().padStart(2, '0')}`;
@@ -129,14 +110,34 @@ function saveAudioFile(audioData) {
   });
 }
 
+function initAutoUpdater() {
+  // Check for updates when the app is ready
+  app.on('ready', () => {
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+
+  // Log the update status
+  autoUpdater.on('update-available', () => {
+    console.log('Update available.');
+  });
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Update downloaded. Restarting app...');
+    autoUpdater.quitAndInstall();
+  });
+  autoUpdater.on('error', (err) => {
+    console.error('Error during update:', err);
+  });
+}
+
 // IPC listener to save the audio file
 ipcMain.on('save-audio-file', (event, audioData) => {
   saveAudioFile(audioData);
 });
 
-// When ready, create the main window
+// When ready, create the main window and initialize auto-updater
 app.on('ready', function () {
   createWindow();
+  initAutoUpdater();
 });
 
 // Quit when all windows are closed (except on macOS)
