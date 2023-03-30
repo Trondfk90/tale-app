@@ -13,7 +13,9 @@ if (require('electron-squirrel-startup')) app.quit();
 let lastUsedFolder = app.getPath('desktop');
 
 // Load environment variables from a .env file
-require('dotenv').config();
+const appRoot = require('app-root-path');
+const dotenvPath = appRoot.resolve('key.env');
+require('dotenv').config({ path: dotenvPath });
 
 // Create the main window
 function createWindow() {
@@ -48,7 +50,10 @@ function createWindow() {
 }
 
 // IPC listener for the synthesize event
-ipcMain.on('synthesize', (event, text, voiceName, pitch, rate) => {
+ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate) => {
+  // Show the loading wheel
+  mainWindow.webContents.send('loading:show');
+
   const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="nb-NO">
     <voice name="${voiceName}">
       <prosody pitch="${pitch}%" rate="${rate}">
@@ -63,6 +68,9 @@ ipcMain.on('synthesize', (event, text, voiceName, pitch, rate) => {
 
   synthesizer.speakSsmlAsync(ssml,
     function (result) {
+      // Hide the loading wheel
+      mainWindow.webContents.send('loading:hide');
+
       if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
         console.log("Synthesis finished.");
         const audioData = result.audioData;
@@ -85,30 +93,11 @@ ipcMain.on('synthesize', (event, text, voiceName, pitch, rate) => {
 
 // Function to save the audio file
 function saveAudioFile(audioData) {
-  // Check if audioData is not null
-  if (!audioData) {
-    console.error('Audio data is null, cannot save the file.');
-    return;
-  }
-
-  function initAutoUpdater() {
-    // Check for updates when the app is ready
-    app.on('ready', () => {
-      autoUpdater.checkForUpdatesAndNotify();
-    });
-  
-    // Log the update status
-    autoUpdater.on('update-available', () => {
-      console.log('Update available.');
-    });
-    autoUpdater.on('update-downloaded', () => {
-      console.log('Update downloaded. Restarting app...');
-      autoUpdater.quitAndInstall();
-    });
-    autoUpdater.on('error', (err) => {
-      console.error('Error during update:', err);
-    });
-  }
+// Check if audioData is not null
+if (!audioData) {
+console.error('Audio data is null, cannot save the file.');
+return;
+}
 
   // Generate a date stamp string
   const date = new Date();
@@ -129,29 +118,50 @@ function saveAudioFile(audioData) {
   });
 }
 
-// IPC listener to save the audio file
-ipcMain.on('save-audio-file', (event, audioData) => {
-  saveAudioFile(audioData);
+function initAutoUpdater() {
+// Check for updates when the app is ready
+app.on('ready', () => {
+autoUpdater.checkForUpdatesAndNotify();
 });
 
-// When ready, create the main window
+// Log the update status
+autoUpdater.on('update-available', () => {
+console.log('Update available.');
+});
+autoUpdater.on('update-downloaded', () => {
+console.log('Update downloaded. Restarting app...');
+autoUpdater.quitAndInstall();
+});
+autoUpdater.on('error', (err) => {
+console.error('Error during update:', err);
+});
+}
+
+// IPC listener to save the audio file
+ipcMain.on('save-audio-file', (event, audioData) => {
+saveAudioFile(audioData);
+});
+
+// When ready, create the main window and initialize auto-updater
 app.on('ready', function () {
-  createWindow();
+createWindow();
+initAutoUpdater();
 });
 
 // Quit when all windows are closed (except on macOS)
 app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+if (process.platform !== 'darwin') {
+app.quit();
+}
 });
 
 // When the app is activated create the main window if it doesn't exist
 app.on('activate', function () {
-  if (mainWindow === null) {
-    createWindow();
-  }
+if (mainWindow === null) {
+createWindow();
+}
 });
+
 
 //    .    .o88o. oooo                                    .o8                                 
 //  .o8    888 `" `888                                   "888                                 

@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
-  <title>Tekst til tale v1.10 Beta</title>
+  <title>Tekst til tale-botolf v1.2.0</title>
   <link rel="stylesheet" type="text/css" href="main.css">
+  <link rel="stylesheet" href="loading-wheel.css">
   <script src="index.js"></script>
   <script src="renderer.js"></script>
 </head>
+<div id="app-content"></div>
 <body>
   <h1>Tekst til tale-botolf</h1>
+  <img>
   &nbsp; &nbsp;
-  <p>Bruk knappene under til og sette inn pauser i teksten for mer naturlig tale</p>
+  <p>Hurtig knapper for og sette inn forskjellige pauser</p>
   <div class="ssml-buttons">
     <button id="btn-none">ingen</button>
     <button id="btn-100ms">egendefinert</button>
@@ -23,6 +26,7 @@
   </div>
     <label for="input-text">Skriv inn tekst her:</label>
     <textarea id="input-text"></textarea>
+    <div id="loading-wheel" class="loader" style="display: none;"></div>
     <label for="ssml-output">ssml-output:</label>
     <textarea id="ssml-output" readonly></textarea>
   </div>
@@ -41,8 +45,9 @@
   <label for="speed-slider">Hastighet:</label>
   <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1">
 
-  <button id="play-recording-btn">Spill av lyd</button>
-  
+  <button id="play-recording-btn">Spill av</button>
+  &nbsp; &nbsp;
   <button id="synthesize-btn">Lagre til fil</button>
+</div>
 </body>
 </html>

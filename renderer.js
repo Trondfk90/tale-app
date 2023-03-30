@@ -1,5 +1,11 @@
 const { ipcRenderer } = require('electron');
+ipcRenderer.on('loading:show', () => {
+  document.getElementById('loading-wheel').style.display = 'block';
+});
 
+ipcRenderer.on('loading:hide', () => {
+  document.getElementById('loading-wheel').style.display = 'none';
+});
 document.addEventListener('DOMContentLoaded', () => {
   const synthesizeBtn = document.getElementById('synthesize-btn');
   const playRecordingBtn = document.getElementById('play-recording-btn');
@@ -31,11 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('synthesize', text, voiceName, pitch, speed);
     ipcRenderer.once('synthesize:done', (event, receivedAudioData) => {
       audioData = receivedAudioData;
-      ipcRenderer.once('synthesize:error', (event, errorMessage) => {
-        showErrorDialog(errorMessage);
-      });
-      
-  
+        
       if (playAudio) {
         const audio = new Audio();
         audio.src = URL.createObjectURL(new Blob([audioData], { type: 'audio/wav' }));
@@ -51,7 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('save-audio-file', audioData);
       }
     });
+  
+    ipcRenderer.once('synthesize:error', (event, errorMessage) => {
+      showErrorDialog(errorMessage);
+    });
   }
+  
 
   function showErrorDialog(errorMessage) {
     const modal = document.createElement('div');

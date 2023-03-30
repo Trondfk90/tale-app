@@ -2,11 +2,11 @@ module.exports = {
   packagerConfig: {
     asar: {
       unpack: "*.node",
-      files: [
-        "**/*",
-        ".env" // Include the .env file in the packaged application
-      ],
     },
+    files: [
+      "**/*",
+      "key.env" // Include the key.env file in the packaged application
+    ],
   },
   rebuildConfig: {},
   makers: [
