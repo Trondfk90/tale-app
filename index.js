@@ -5,7 +5,7 @@ const ipcMain = require('electron').ipcMain; // Inter-process communication
 const { autoUpdater } = require('electron-updater');
 const path = require('path'); // Path module
 const fs = require('fs'); // File System module
-const iconPath = path.join(__dirname, 'icon2.png');
+const iconPath = path.join(__dirname, 'icon.ico');
 
 if (require('electron-squirrel-startup')) app.quit();
 
@@ -21,19 +21,20 @@ require('dotenv').config({ path: dotenvPath });
 function createWindow() {
   const platform = process.platform;
   let iconFile;
-
+  
   if (platform === 'win32') {
-    iconFile = 'icon2.ico';
+    iconFile = 'assets/icon.ico';
   } else {
-    iconFile = 'icon2.png';
+    iconFile = 'assets/icon.png';
   }
-
+  
   const iconPath = path.join(__dirname, iconFile);
-
+  
   mainWindow = new BrowserWindow({
     icon: iconPath,
-    width: 1000,
+    width: 1100,
     height: 1300,
+    frame: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -50,17 +51,24 @@ function createWindow() {
 }
 
 // IPC listener for the synthesize event
-ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate) => {
+ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate, templateContent) => {
+
+
   // Show the loading wheel
   mainWindow.webContents.send('loading:show');
 
-  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="nb-NO">
+//generate the SSML string and synthesize the speech
+const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="nb-NO">
     <voice name="${voiceName}">
       <prosody pitch="${pitch}%" rate="${rate}">
+        ${templateContent}
         ${text}
       </prosody>
     </voice>
   </speak>`;
+
+    // Log the SSML content to the console
+    console.log("SSML content:", ssml);
 
   const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, process.env.SPEECH_REGION);
   speechConfig.speechSynthesisVoiceName = voiceName;
@@ -68,7 +76,8 @@ ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate) => {
 
   synthesizer.speakSsmlAsync(ssml,
     function (result) {
-      // Hide the loading wheel
+
+  // Hide the loading wheel
       mainWindow.webContents.send('loading:hide');
 
       if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
@@ -93,6 +102,7 @@ ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate) => {
 
 // Function to save the audio file
 function saveAudioFile(audioData) {
+
 // Check if audioData is not null
 if (!audioData) {
 console.error('Audio data is null, cannot save the file.');
@@ -119,6 +129,7 @@ return;
 }
 
 function initAutoUpdater() {
+
 // Check for updates when the app is ready
 app.on('ready', () => {
 autoUpdater.checkForUpdatesAndNotify();

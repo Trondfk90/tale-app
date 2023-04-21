@@ -1,5 +1,6 @@
 module.exports = {
   packagerConfig: {
+  
     asar: {
       unpack: "*.node",
     },
@@ -12,7 +13,7 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {iconUrl: 'D:/Tale-app-v3/Tale app/icon2.ico',},
       setupIcon: 'D:/Tale-app-v3/Tale app/icon2.ico',
     },
     {
