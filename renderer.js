@@ -1,18 +1,54 @@
-// Import ipcRenderer from electron to enable communication between the main process and renderer process
-const { ipcRenderer } = require('electron');
+const { ipcRenderer} = require('electron');
 
-// Event listener for showing the loading wheel
-ipcRenderer.on('loading:show', () => {
-  document.getElementById('loading-wheel').style.display = 'block';
+document.addEventListener('DOMContentLoaded', (event) => {
+
+  let isAuthenticated = false;
+
+  // function for updating auth-button
+  function updateAuthButton(username) {
+    const authButton = document.getElementById('auth-button');
+    const userNameDiv = document.getElementById('user-name');
+  
+    if (username) {
+        authButton.textContent = 'Log Out';
+        userNameDiv.textContent = username;
+    } else {
+        authButton.textContent = 'Log In';
+        userNameDiv.textContent = '';
+    }
+}
+
+  ipcRenderer.on('msal:loginSuccess', handleResponse);
+
+  function handleResponse(event, response) {
+    if (response.account && response.account.username) {
+      isAuthenticated = true;
+      updateAuthButton(response.account.username);
+    } else if (resp && response.error) {
+      console.log('Error:', response.error);
+      ipcRenderer.send('msal:loginFailure', response.error);
+    }
+  }
+  
+
+ipcRenderer.on('msal:signOut', () => {
+  isAuthenticated = false; 
+  updateAuthButton(null); 
+  signIn();  // Initiate a new sign-in process
 });
 
-// Event listener for hiding the loading wheel
-ipcRenderer.on('loading:hide', () => {
-  document.getElementById('loading-wheel').style.display = 'none';
-});
 
-// Event listener for when the DOM content is loaded
-document.addEventListener('DOMContentLoaded', () => {
+  // Get a reference to the button
+  const authButton = document.getElementById('auth-button');
+
+  // When the auth button is clicked
+  authButton.addEventListener('click', () => {
+    if (authButton.textContent === 'Log In') {
+      ipcRenderer.send('signIn');
+    } else {
+      ipcRenderer.send('signOut');
+    }
+  });
 
   // Declare and initialize DOM elements
   const synthesizeBtn = document.getElementById('synthesize-btn');
@@ -35,9 +71,82 @@ document.addEventListener('DOMContentLoaded', () => {
   const phoneCancelButton = document.getElementById('phone-cancel-button');
   const stopRecordingBtn = document.getElementById('stop-recording-btn');
   const pauseRecordingBtn = document.getElementById('pause-recording-btn');
+  const modal = document.getElementById("Bekreft");
+  const yesButton = document.getElementById("yesButton");
+  const noButton = document.getElementById("noButton");
+  const span = document.getElementsByClassName("close")[0];
+
+  // Event listener for hamburger menu click
+  document.getElementById('hamburger-menu').addEventListener('click', (event) => {
+    event.stopPropagation();
+    const overlay = document.getElementById('overlay');
+    if (overlay.style.left === '-250px' || overlay.style.left === '') {
+        overlay.style.left = '0px';
+        document.body.classList.add('overlay-open');
+    } else {
+        overlay.style.left = '-250px';
+        document.body.classList.remove('overlay-open');
+    }
+});
+
+document.body.addEventListener('click', () => {
+    const overlay = document.getElementById('overlay');
+    if (document.body.classList.contains('overlay-open')) {
+        overlay.style.left = '-250px';
+        document.body.classList.remove('overlay-open');
+    }
+});
+
+document.getElementById('overlay').addEventListener('click', (event) => {
+    event.stopPropagation();
+});
+
+
+document.getElementById('About').addEventListener('click', (event) => {
+  event.stopPropagation();
+  document.getElementById('about-modal').style.display = 'block';
+});
+
+document.getElementById('close-about-modal').addEventListener('click', () => {
+  document.getElementById('about-modal').style.display = 'none';
+});
 
 
   
+  // modal's behavior
+  ipcRenderer.on('showLogoutModal', () => {
+    modal.style.display = "block";
+  });
+
+  yesButton.onclick = function() {
+    ipcRenderer.send('dialogResponse', 'yes');
+    modal.style.display = "none";
+  }
+
+  noButton.onclick = function() {
+    ipcRenderer.send('dialogResponse', 'no');
+    modal.style.display = "none";
+  }
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
+    // Event listener for showing the loading wheel
+  ipcRenderer.on('loading:show', () => {
+    document.getElementById('loading-wheel').style.display = 'block';
+  });
+
+  // Event listener for hiding the loading wheel
+  ipcRenderer.on('loading:hide', () => {
+    document.getElementById('loading-wheel').style.display = 'none';
+  });
 
   // Event listener for showing the phone overlay
   insertPhoneButton.addEventListener('click', () => {
@@ -102,9 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // SSML templates
     const templates = {
-      template1: `<mstts:silence type="comma-exact" value="100ms"/><mstts:silence type="semicolon-exact" value="200ms"/><mstts:silence type="enumerationcomma-exact" value="300ms"/>`,
+      template1: `<mstts:silence type="comma-exact" value="300ms"/><mstts:silence type="semicolon-exact" value="400ms"/><mstts:silence type="enumerationcomma-exact" value="500ms"/><mstts:silence type="period" value="600ms"/>`,
       template2: `<mstts:silence type="comma-exact" value="200ms"/><mstts:silence type="semicolon-exact" value="300ms"/><mstts:silence type="enumerationcomma-exact" value="400ms"/>`,
-      template3: `<mstts:silence type="comma-exact" value="300ms"/><mstts:silence type="semicolon-exact" value="400ms"/><mstts:silence type="enumerationcomma-exact" value="500ms"/>`
+      template3: `<mstts:silence type="comma-exact" value="100ms"/><mstts:silence type="semicolon-exact" value="200ms"/><mstts:silence type="enumerationcomma-exact" value="300ms"/>`
     };
   
   // Get the selected template content
@@ -140,7 +249,7 @@ function synthesizeText(text, voiceName, pitch, speed, templateContent, saveToFi
   ipcRenderer.once('synthesize:done', (event, receivedAudioData) => {
     audioData = receivedAudioData;
 
-  // Modify this block of code in the synthesizeText function:
+  // synthesizeText function:
 if (playAudio) {
   audio = new Audio();
   audio.src = URL.createObjectURL(new Blob([audioData], { type: 'audio/wav' }));
@@ -167,6 +276,44 @@ if (playAudio) {
   });
 
 }
+//update event listener
+document.getElementById('check-for-updates').addEventListener('click', () => {
+  console.log('check-for-updates')
+  ipcRenderer.send('check-for-updates');
+});
+
+ipcRenderer.on('showUpdateAvailableModal', (event, info) => {
+  // Show the update available modal
+  document.getElementById('update-modal').style.display = 'block';
+  document.getElementById('modalMessage').textContent = `En oppdatering er tilgjengelig. Vil du laste ned og installere den? For mer informasjon, se utgivelsesnotatene her: https://github.com/Trondfk90/tale-app/releases/tag/${info.version}`;
+  document.getElementById('okButton').onclick = () => {
+    // User clicked "Download and Install" button
+    ipcRenderer.send('downloadUpdate');
+    document.getElementById('update-modal').style.display = 'none';
+  };
+  document.getElementById('cancelButton').onclick = () => {
+    // User clicked "Later" button
+    document.getElementById('update-modal').style.display = 'none';
+  };
+});
+
+ipcRenderer.on('showUpdateDownloadedModal', (event, info) => {
+  // Show the update downloaded modal
+  document.getElementById('update-modal').style.display = 'block';
+  document.getElementById('modalMessage').textContent = `Oppdateringen er lastet ned og klar til å installeres. Installere nå? For mer informasjon, se utgivelsesnotatene her: https://github.com/Trondfk90/tale-app/releases/tag/${info.version}`;
+  document.getElementById('okButton').onclick = () => {
+    // User clicked "Install and Relaunch" button
+    ipcRenderer.send('quitAndInstallUpdate');
+    document.getElementById('update-modal').style.display = 'none';
+  };
+  document.getElementById('cancelButton').onclick = () => {
+    // User clicked "Later" button
+    document.getElementById('update-modal').style.display = 'none';
+  };
+});
+
+
+
 
 // Function for displaying error dialog
 function showErrorDialog(errorMessage) {
@@ -341,10 +488,6 @@ pauseRecordingBtn.addEventListener('click', () => {
     return email.split('').map(char => (char === '@' ? ' alfakrøll ' : (char === '.' ? ' punktum ' : char))).join(' ');
   }
   
-
   // Initialize the synthesize button state
   updateSynthesizeButton();
-
 });
-
-

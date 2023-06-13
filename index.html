@@ -2,17 +2,78 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; media-src blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
-  <title>Tekst til tale-botolf v1.3.0</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://login.microsoftonline.com; media-src blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <meta name="author" content="tfkweb.no">
+  <title>Tale-botolf v1.5.2</title>
   <link rel="stylesheet" type="text/css" href="main.css">
   <link rel="stylesheet" href="loading-wheel.css">
   <script src="index.js"></script>
   <script src="renderer.js"></script>
+  
 </head>
 <body>
-  <h1>Tekst til tale-botolf</h1>
-  &nbsp; &nbsp;
-  <p>Hurtig knapper for SSML funksjoner</p>
+  <!-- Hamburger Menu -->
+  <div id="hamburger-menu">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  
+<!-- Overlay -->
+<div id="overlay">
+  <div id="overlay-item">
+      <a href="#" id="check-for-updates">&rarr; Se etter oppdateringer</a>
+  </div>
+  <div id="overlay-item">
+    <a href="#" id="Settings">&rarr; (placeholder))</a>
+  </div>
+  <div id="overlay-item">
+    <a href="#" id="About">&rarr; Om appen</a>
+  </div>
+</div>
+
+<!-- About Modal -->
+<div id="about-modal" class="about-modal">
+  <div class="about-modal-content">
+    <span id="close-about-modal" class="close">&times;</span>
+    <p>Tale-botolf er en avansert tekst-til-tale-generator drevet av kunstig intelligens. Applikasjonen er designet for å skape informativ og nøyaktig kommunikasjon på en enkel og intuitiv måte.</p>
+    <br>
+    <p>Med Tale-botolf kan du konvertere tekst til tale ved å skrive inn teksten i tekstboksen. Du kan deretter velge blant forskjellige stemmer og justere tonehøyde og hastighet for å tilpasse lydutgangen etter dine behov.</p>
+    <br>
+    <p>Tale-botolf støtter flere språk, noe som gjør Tale-botolf til et allsidig verktøy for ulike kommunikasjonsbehov.</p>
+    <p>Når du er fornøyd med innstillingene dine, klikk på "Generer lyd"-knappen for å høre teksten lest opp. Hvis du ønsker å lagre lyden til en fil, kan du enkelt gjøre dette ved å klikke på "Lagre til fil"-knappen.</p>
+    <br>
+    <p>Har du en tilbakemelding, eller har du funnet en feil?: Send det til: trond@tfkweb.no</p>
+
+    
+  </div>
+</div>
+
+<div id="update-modal" style="display: none">
+    <h2>Oppdatering tilgjengelig</h2>
+    <p id="modalMessage">En oppdatering er tilgjengelig. Vil du laste ned og installere den?</p>
+    <button id="okButton">Last ned og installer?</button>
+    <button id="cancelButton">Senere</button>
+  </div>
+</div>
+
+
+
+  <div id="auth-button-container">
+    <span id="user-name"></span>
+    <button id="auth-button">Log Out</button>
+  </div>
+
+  <div id="Bekreft" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <p>Er du sikker på at du vil logge ut?</p>
+      <button id="yesButton">Ja</button>
+      <button id="noButton">Nei</button>
+    </div>
+  </div>  
+  <br>
+<p>AI-drevet tekst til tale generator for informativ og nøyaktig kommunikasjon.
   <div class="ssml-buttons">
     <button id="btn-none">ingen</button>
     <button id="btn-100ms">egendefinert</button>
@@ -75,6 +136,9 @@
 
   &nbsp; &nbsp;
   <button id="synthesize-btn">Lagre til fil</button>
+
+
+<div id="overlay-bg"></div>
 
 </body>
 </html>

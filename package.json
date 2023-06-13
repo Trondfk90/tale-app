@@ -1,8 +1,8 @@
 {
   "name": "tale-botolf",
   "bin": "index.js",
-  "version": "1.3.0",
-  "description": "AI-drevet tekst til tale generator for kreativ, informativ og nøyaktig kommunikasjon.",
+  "version": "1.5.2",
+  "description": "AI-drevet tekst til tale generator for informativ og nøyaktig kommunikasjon.",
   "main": "index.js",
   "scripts": {
     "start": "electron-forge start",
@@ -19,7 +19,7 @@
           "name": "@electron-forge/maker-squirrel",
           "config": {
             "name": "tale_botolf",
-            "iconUrl": "https://tfkweb.no/wp-content/uploads/2023/03/icon2.ico",
+            "iconUrl": "https://tfkweb.no/wp-content/uploads/2023/06/icon.ico",
             "setupIcon": "assets/icon.ico"
           }
         },
@@ -54,11 +54,16 @@
   "author": "tfk",
   "license": "AGPL",
   "dependencies": {
+    "@azure/msal-browser": "^2.37.0",
+    "@azure/msal-node": "^1.17.2",
+    "@electron/remote": "^2.0.9",
     "app-root-path": "^3.1.0",
+    "crypto": "^1.0.1",
     "dotenv": "^16.0.3",
-    "electron-squirrel-startup": "^1.0.0",
     "electron-updater": "^5.3.0",
-    "microsoft-cognitiveservices-speech-sdk": "^1.25.1"
+    "microsoft-cognitiveservices-speech-sdk": "^1.25.1",
+    "msal": "^1.4.18",
+    "update-electron-app": "^2.0.1"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.1.0",
@@ -69,17 +74,28 @@
     "@electron-forge/maker-zip": "^6.1.0",
     "electron": "^23.1.3",
     "electron-forge": "^5.2.4",
+    "electron-squirrel-startup": "^1.0.0",
     "reinstall-node-modules": "^1.2.0"
   },
   "build": {
     "appId": "no.tfkweb.tale-botolf",
     "productName": "Tale-Botolf",
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "Trondfk90",
-        "repo": "tale-app"
-      }
-    ]
+    "win": {
+      "target": "nsis"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release",
+      "owner": "Trondfk90",
+      "repo": "https://github.com/Trondfk90/tale-app",
+      "token": "${GH_TOKEN}"
+    },
+    "protocols": {
+      "name": "Tale-Botolf",
+      "schemes": [
+        "talebotolf",
+        "msald5d75d5d-ddcb-45bd-ac84-c45faf470e1b"
+      ]
+    }
   }
 }
