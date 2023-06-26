@@ -1,6 +1,6 @@
 // Require the necessary modules
-const { app, BrowserWindow, dialog, protocol, ipcMain} = require('electron'); 
-const { autoUpdater, AppUpdater } = require('electron-updater');
+const { app, BrowserWindow, dialog, protocol, ipcMain } = require('electron');
+const updater = require('update-electron-app');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const path = require('path');
 const fs = require('fs');
@@ -63,9 +63,13 @@ if (process.platform === 'win32') {
     }
   };
 
-  if (handleSquirrelEvent()) {
-    return;
+  function checkSquirrelEvent() {
+    if (handleSquirrelEvent()) {
+      return;
+    }
   }
+  
+  checkSquirrelEvent();
 }
 
 
@@ -142,7 +146,7 @@ function createWindow() {
     
     mainWindow = new BrowserWindow({
       icon: iconPath,
-      width: 1000,
+      width: 900,
       height: 1300,
       frame: true,
       webPreferences: {
@@ -194,9 +198,34 @@ function createWindow() {
   });
 }
 
+// Get the path to the log file
+const logFilePath = path.join(__dirname, 'log.txt');
 
-// Set a default folder for saving audio files
-  let lastUsedFolder = app.getPath('desktop');
+ipcMain.on('save-log', (event, arg) => {
+  console.log('Received save-log event with arg:', arg);
+  fs.writeFileSync(logFilePath, JSON.stringify(arg));
+});
+
+ipcMain.on('load-log', (event) => {
+  let log = [];
+  if (fs.existsSync(logFilePath)) {
+    log = JSON.parse(fs.readFileSync(logFilePath, 'utf8'));
+  }
+  event.reply('load-log-reply', log);
+});
+
+ipcMain.on('import-log', (event, arg) => {
+  let log = JSON.parse(fs.readFileSync(logFilePath, 'utf8'));
+  event.reply('import-log-reply', log[arg]);
+});
+
+ipcMain.on('delete-log', (event, arg) => {
+  let log = JSON.parse(fs.readFileSync(logFilePath, 'utf8'));
+  log.splice(arg, 1);
+  fs.writeFileSync(logFilePath, JSON.stringify(log));
+  event.reply('delete-log-reply', log);
+});
+
 
 // IPC listener for the synthesize event
 ipcMain.on('synthesize', async (event, text, voiceName, pitch, rate, templateContent) => {
@@ -281,93 +310,61 @@ ipcMain.on('save-audio-file', (event, audioData) => {
 saveAudioFile(audioData);
 });
 
-
-/// Define the setupAutoUpdater function
-function setupAutoUpdater() {
-  try {
-    autoUpdater.autoDownload = true;
-
-    autoUpdater.on('update-available', (info) => {
-      // Send a message to the renderer process to show the update available modal
-      mainWindow.webContents.send('showUpdateAvailableModal', info);
-    });
-    
-    autoUpdater.on('update-downloaded', (info) => {
-      // Send a message to the renderer process to show the update downloaded modal
-      mainWindow.webContents.send('showUpdateDownloadedModal', info);
-    });
-
-    autoUpdater.on('error', (error) => {
-      console.error('Error during auto-update:', error);
-    });
-  } catch (error) {
-    console.error('Error setting up autoUpdater:', error);
-  }
-}
+//Check for updates button
+ipcMain.on('check-for-updates', () => {
+  updater();
+});
 
 // Lock the app to one instance
-const gotTheLock = app.requestSingleInstanceLock()
+const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
-  app.quit()
+  app.quit();
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
     }
-  })
-
-
-app.on('ready', async () => {
-  // Register custom protocol
-  protocol.registerHttpProtocol('app', (request, callback) => {
-    const url = request.url.substr(7);
-    callback({ path: path.normalize(`${__dirname}/${url}`) });
-  }, (error) => {
-    if (error) console.error('Failed to register protocol');
   });
 
-  // Create the main window
-  createWindow();
+  app.on('ready', async () => {
+    // Register custom protocol
+    protocol.registerHttpProtocol('app', (request, callback) => {
+      const url = request.url.substr(7);
+      callback({ path: path.normalize(`${__dirname}/${url}`) });
+    }, (error) => {
+      if (error) console.error('Failed to register protocol');
+    });
 
-  try {
-    // Start the sign-in process
-    await signIn();
-  } catch (error) {
-    console.error('Sign-in process failed:', error);
-  }
-
-  // Set up autoUpdater
-  setupAutoUpdater();
-
-  // Check for updates and notify the user if an update is available
-  autoUpdater.checkForUpdatesAndNotify();
-});
-
-ipcMain.on('check-for-updates', () => {
-  autoUpdater.checkForUpdates();
-});
-
-ipcMain.on('downloadUpdate', () => {
-  autoUpdater.downloadUpdate();
-});
-
-ipcMain.on('quitAndInstallUpdate', () => {
-  autoUpdater.quitAndInstall();
-});
-
-// Quit when all windows are closed (except on macOS)
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-// When the app is activated create the main window if it doesn't exist
-app.on('activate', function () {
-  if (mainWindow === null) {
+    // Create the main window
     createWindow();
-  }
-});
+
+    try {
+      // Start the sign-in process
+      await signIn();
+    } catch (error) {
+      console.error('Sign-in process failed:', error);
+    }
+
+    // Call the updater
+    updater();
+  });
+
+  // Set a default folder for saving audio files
+  let lastUsedFolder = app.getPath('desktop');
+
+  // Quit when all windows are closed (except on macOS)
+  app.on('window-all-closed', function () {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  // When the app is activated create the main window if it doesn't exist
+  app.on('activate', function () {
+    if (mainWindow === null) {
+      createWindow();
+    }
+  });
 }

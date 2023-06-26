@@ -1,6 +1,148 @@
-const { ipcRenderer} = require('electron');
+const { ipcRenderer, remote} = require('electron');
 
 document.addEventListener('DOMContentLoaded', (event) => {
+
+//text log
+  let username;
+
+function handleLogin(user) {
+  username = user.username;
+  loadLog(); 
+}
+
+let log;
+
+function saveToLog(input) {
+  log.push({text: input, date: new Date()});
+  ipcRenderer.send('save-log', log);
+  
+  let saveNotification = document.getElementById('save-notification');
+  saveNotification.style.display = 'inline'; 
+  setTimeout(() => {
+    saveNotification.style.display = 'none';
+  }, 2000);
+}
+
+function loadLog() {
+  ipcRenderer.send('load-log');
+}
+
+function importFromLog() {
+  try {
+    let selectedItem = document.getElementById('log-table').querySelector('tr.selected');
+    if (selectedItem) {
+      ipcRenderer.send('import-log', selectedItemIndex);
+    }
+  } catch (error) {
+    console.error('Error importing from log:', error);
+  }
+}
+
+ipcRenderer.on('import-log-reply', (event, arg) => {
+  try {
+    document.getElementById('input-text').value = arg.text;
+  } catch (error) {
+    console.error('Error setting input text:', error);
+  }
+});
+
+let selectedItemIndex;
+
+function handleRowClick(event) {
+  let rows = document.getElementById('log-table').querySelectorAll('tr');
+  rows.forEach(row => row.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  selectedItemIndex = Array.from(event.currentTarget.parentNode.children).reverse().indexOf(event.currentTarget);
+  document.getElementById('import-button').style.display = 'block';
+  document.getElementById('delete-button').style.display = 'block';
+}
+
+function deleteFromLog() {
+  let selectedItem = document.getElementById('log-table').querySelector('tr.selected');
+  if (selectedItem) {
+    ipcRenderer.send('delete-log', selectedItemIndex);
+    selectedItem.classList.remove('selected');
+    document.getElementById('import-button').style.display = 'none';
+    document.getElementById('delete-button').style.display = 'none';
+  }
+}
+
+ipcRenderer.on('delete-log-reply', (event, arg) => {
+  log = arg;
+  loadLog(); 
+});
+
+function handleConfirmDelete() {
+  if (confirm("Er du sikker på at du vil slette denne oppføringen?")) {
+  }
+  closeConfirmationModal();
+}
+
+function openConfirmationModal() {
+  let selectedItem = document.getElementById('log-table').querySelector('tr.selected');
+  if (selectedItem) {
+    selectedItem.classList.add('confirmed-delete');
+  }
+
+  let confirmationModal = document.getElementById('confirmation-modal');
+  confirmationModal.style.display = 'block';
+
+  let confirmDeleteButton = document.getElementById('confirm-delete-button');
+  let cancelDeleteButton = document.getElementById('cancel-delete-button');
+
+  confirmDeleteButton.addEventListener('click', handleConfirmDelete);
+  cancelDeleteButton.addEventListener('click', handleCancelDelete);
+}
+
+
+function closeConfirmationModal() {
+  let confirmationModal = document.getElementById('confirmation-modal');
+  confirmationModal.style.display = 'none';
+
+  let confirmDeleteButton = document.getElementById('confirm-delete-button');
+  let cancelDeleteButton = document.getElementById('cancel-delete-button');
+
+  confirmDeleteButton.removeEventListener('click', handleConfirmDelete);
+  cancelDeleteButton.removeEventListener('click', handleCancelDelete);
+}
+
+function handleCancelDelete() {
+  closeConfirmationModal();
+}
+document.getElementById('search-button').addEventListener('click', () => {
+  let searchTerm = document.getElementById('search-input').value.toLowerCase();
+  let filteredLog = log.filter(item => item.text.toLowerCase().includes(searchTerm));
+  updateLogTable(filteredLog);
+});
+
+
+function updateLogTable(log) {
+  let logTable = document.getElementById('log-table');
+  logTable.innerHTML = '';
+  log.forEach((item, index) => {
+    let tr = document.createElement('tr');
+    tr.dataset.item = JSON.stringify(item);
+    let tdText = document.createElement('td');
+    tdText.textContent = item.text;
+    tr.appendChild(tdText);
+    let tdDate = document.createElement('td');
+    tdDate.textContent = new Date(item.date).toLocaleString();
+    tr.appendChild(tdDate);
+    tr.addEventListener('click', handleRowClick);
+    tr.addEventListener('dblclick', importFromLog);
+    logTable.prepend(tr);
+  });
+}
+
+function loadLog() {
+  ipcRenderer.send('load-log');
+}
+
+ipcRenderer.on('load-log-reply', (event, arg) => {
+  log = arg;
+  updateLogTable(log);
+});
+
 
   let isAuthenticated = false;
 
@@ -18,17 +160,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 }
 
-  ipcRenderer.on('msal:loginSuccess', handleResponse);
+ipcRenderer.on('msal:loginSuccess', handleResponse);
 
-  function handleResponse(event, response) {
-    if (response.account && response.account.username) {
-      isAuthenticated = true;
-      updateAuthButton(response.account.username);
-    } else if (resp && response.error) {
-      console.log('Error:', response.error);
-      ipcRenderer.send('msal:loginFailure', response.error);
-    }
+function handleResponse(event, response) {
+  if (response.account && response.account.username) {
+    isAuthenticated = true;
+    updateAuthButton(response.account.username);
+    handleLogin(response.account); 
+  } else if (response && response.error) {
+    console.log('Error:', response.error);
+    ipcRenderer.send('msal:loginFailure', response.error);
   }
+}
+
   
 
 ipcRenderer.on('msal:signOut', () => {
@@ -97,6 +241,7 @@ document.body.addEventListener('click', () => {
     }
 });
 
+
 document.getElementById('overlay').addEventListener('click', (event) => {
     event.stopPropagation();
 });
@@ -111,6 +256,58 @@ document.getElementById('close-about-modal').addEventListener('click', () => {
   document.getElementById('about-modal').style.display = 'none';
 });
 
+
+document.getElementById('save-to-log-btn').addEventListener('click', () => {
+  saveToLog(document.getElementById('input-text').value);
+});
+
+document.getElementById('log-menu-btn').addEventListener('click', () => {
+  document.getElementById('log-modal').style.display = 'block';
+  loadLog(); 
+});
+
+document.getElementById('check-for-updates').addEventListener('click', () => {
+  ipcRenderer.send('check-for-updates');
+});
+
+
+document.getElementById('log-modal').querySelector('.close').addEventListener('click', () => {
+  document.getElementById('log-modal').style.display = 'none';
+});
+
+document.getElementById('log-modal').addEventListener('click', (event) => {
+  let previouslySelectedItem = document.getElementById('log-modal').querySelector('li.selected');
+  if (previouslySelectedItem) {
+    previouslySelectedItem.classList.remove('selected');
+  }
+  if (event.target.tagName === 'LI') {
+    event.target.classList.add('selected');
+  }
+});
+
+document.getElementById('import-button').addEventListener('click', () => {
+  let selectedRow = document.querySelector('#log-table tr.selected');
+  if (selectedRow) {
+    importFromLog();
+    document.getElementById('log-modal').style.display = 'none';
+  }
+});
+
+document.getElementById('delete-button').addEventListener('click', openConfirmationModal);
+document.getElementById('confirm-delete-button').addEventListener('click', deleteFromLog);
+
+
+
+document.getElementById('log-menu-btn').addEventListener('click', () => {
+  document.getElementById('log-modal').style.display = 'block';
+  document.body.classList.add('modal-open');
+  loadLog(); 
+});
+
+document.getElementById('log-modal').querySelector('.close').addEventListener('click', () => {
+  document.getElementById('log-modal').style.display = 'none';
+  document.body.classList.remove('modal-open');
+});
 
   
   // modal's behavior
@@ -276,44 +473,6 @@ if (playAudio) {
   });
 
 }
-//update event listener
-document.getElementById('check-for-updates').addEventListener('click', () => {
-  console.log('check-for-updates')
-  ipcRenderer.send('check-for-updates');
-});
-
-ipcRenderer.on('showUpdateAvailableModal', (event, info) => {
-  // Show the update available modal
-  document.getElementById('update-modal').style.display = 'block';
-  document.getElementById('modalMessage').textContent = `En oppdatering er tilgjengelig. Vil du laste ned og installere den? For mer informasjon, se utgivelsesnotatene her: https://github.com/Trondfk90/tale-app/releases/tag/${info.version}`;
-  document.getElementById('okButton').onclick = () => {
-    // User clicked "Download and Install" button
-    ipcRenderer.send('downloadUpdate');
-    document.getElementById('update-modal').style.display = 'none';
-  };
-  document.getElementById('cancelButton').onclick = () => {
-    // User clicked "Later" button
-    document.getElementById('update-modal').style.display = 'none';
-  };
-});
-
-ipcRenderer.on('showUpdateDownloadedModal', (event, info) => {
-  // Show the update downloaded modal
-  document.getElementById('update-modal').style.display = 'block';
-  document.getElementById('modalMessage').textContent = `Oppdateringen er lastet ned og klar til å installeres. Installere nå? For mer informasjon, se utgivelsesnotatene her: https://github.com/Trondfk90/tale-app/releases/tag/${info.version}`;
-  document.getElementById('okButton').onclick = () => {
-    // User clicked "Install and Relaunch" button
-    ipcRenderer.send('quitAndInstallUpdate');
-    document.getElementById('update-modal').style.display = 'none';
-  };
-  document.getElementById('cancelButton').onclick = () => {
-    // User clicked "Later" button
-    document.getElementById('update-modal').style.display = 'none';
-  };
-});
-
-
-
 
 // Function for displaying error dialog
 function showErrorDialog(errorMessage) {
@@ -449,10 +608,7 @@ pauseRecordingBtn.addEventListener('click', () => {
     synthesizeText(text, voiceSelect.value, pitch, speed, templateContent, true, false);
   });
 
-  // Event listeners for inserting SSML break tags
-  document.getElementById('btn-none').addEventListener('click', () => {
-    insertSSMLTag('<mstts:ttsbreak strength="none" />');
-  });
+  // Event listeners for inserting SSML
   
   document.getElementById('btn-100ms').addEventListener('click', () => {
     insertSSMLTag('<break time="100ms" />');
